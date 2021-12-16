@@ -52,7 +52,7 @@ double IntegratePartialSum(function F, double a, double b)
 {
     double Result = 0;
     double dx = (b - a) / STEPS;
-    unsigned int T = std::thread::hardware_concurrency();
+    unsigned int T = get_num_threads();
     auto Vec = std::vector(T, partial_sum{ 0.0 });
     std::vector<std::thread> Threads;
 
@@ -364,7 +364,7 @@ requires (
         alignas(std::hardware_destructive_interference_size) ElementType value;
     };
     static auto reduction_partial_results =
-        std::vector<reduction_partial_result_t>(std::thread::hardware_concurrency(), reduction_partial_result_t{ zero });
+        std::vector<reduction_partial_result_t>(get_num_threads(), reduction_partial_result_t{ zero });
     constexpr std::size_t k = 2;
     std::barrier<> bar{ (std::ptrdiff_t)T };
 
