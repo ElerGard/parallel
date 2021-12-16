@@ -9,7 +9,7 @@
 #include <type_traits>
 
 #define STEPS 100000000
-#define CACHE_LINE_SIZE 64u
+#define SIZE 64u
 
 static unsigned num_treads = std::thread::hardware_concurrency();
 unsigned get_num_threads()
@@ -79,7 +79,7 @@ double IntegratePartialSum(function F, double a, double b)
 typedef struct experiment_result_
 {
     double Result;
-    double TimeMS;
+    double TimeInMs;
 } experiment_result;
 
 
@@ -92,7 +92,7 @@ experiment_result RunExperiment(IntegrateFunction I)
 
     experiment_result Result;
     Result.Result = res;
-    Result.TimeMS = t1 - t0;
+    Result.TimeInMs = t1 - t0;
 
     return Result;
 }
@@ -101,17 +101,17 @@ void ShowExperimentResult(IntegrateFunction I)
 {
     set_num_threads(1);
 
-    printf("%10s, %10s %10sms %14s\n", "Threads", "Result", "TimeMS", "Acceleration");
+    printf("%10s %10s %10s %14s\n", "Threads", "Result", "Time in ms", "Acceleration");
     experiment_result Experiment;
     Experiment = RunExperiment(I);
-    printf("%10d, %10g %10gms %14g\n", 1, Experiment.Result, Experiment.TimeMS, 1.0f);
-    double Time = Experiment.TimeMS;
+    printf("%10d %10g %10g %14g\n", 1, Experiment.Result, Experiment.TimeInMs, 1.0f);
+    double Time = Experiment.TimeInMs;
 
     for (unsigned T = 2; T <= omp_get_num_procs(); T++)
     {
         set_num_threads(T);
         Experiment = RunExperiment(I);
-        printf("%10d, %10g %10gms %14g\n", T, Experiment.Result, Experiment.TimeMS, Time / Experiment.TimeMS);
+        printf("%10d %10g %10g %14g\n", T, Experiment.Result, Experiment.TimeInMs, Time / Experiment.TimeInMs);
     }
     printf("\n");
 }
@@ -129,7 +129,7 @@ double IntegrateAlign(function Function, double a, double b)
 #pragma omp single
         {
             T = (unsigned int)omp_get_num_threads();
-            Accum = (partial_sum*)_aligned_malloc(T * sizeof(*Accum), CACHE_LINE_SIZE);
+            Accum = (partial_sum*)_aligned_malloc(T * sizeof(*Accum), SIZE);
             memset(Accum, 0, T * sizeof(*Accum));
         }
 
@@ -220,7 +220,7 @@ double IntegrateAlignOMP(unary_function Function, double a, double b)
 #pragma omp single
         {
             T = (unsigned int)omp_get_num_threads();
-            Accum = (partial_sum*)_aligned_malloc(T * sizeof(*Accum), CACHE_LINE_SIZE);
+            Accum = (partial_sum*)_aligned_malloc(T * sizeof(*Accum), SIZE);
             memset(Accum, 0, T * sizeof(*Accum));
         }
 
